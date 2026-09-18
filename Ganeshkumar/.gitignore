@@ -12,6 +12,12 @@ dist
 dist-ssr
 *.local
 
+# Env files — .env.local/.env.*.local are already covered by *.local above;
+# .env itself isn't, so it's listed explicitly. Never commit real config.
+.env
+.env.*
+!.env.example
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

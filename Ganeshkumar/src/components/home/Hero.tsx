@@ -7,6 +7,7 @@ import { siteConfig } from "../../config/site";
 
 export function Hero() {
   const prefersReducedMotion = useReducedMotion();
+  const hasResume = Boolean(siteConfig.resumeUrl) && siteConfig.resumeUrl !== "#";
 
   const container: Variants = {
     hidden: {},
@@ -63,14 +64,25 @@ export function Hero() {
             <Button to="/work">
               Explore my work <span aria-hidden="true">→</span>
             </Button>
-            <Button
-              variant="secondary"
-              href={siteConfig.resumeUrl}
-              target={siteConfig.resumeUrl === "#" ? undefined : "_blank"}
-              rel="noreferrer"
-            >
-              Download resume
-            </Button>
+            {hasResume ? (
+              <Button
+                variant="secondary"
+                href={siteConfig.resumeUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Download resume
+              </Button>
+            ) : (
+              <Button
+                variant="secondary"
+                disabled
+                aria-label="Resume coming soon"
+                title="Resume coming soon"
+              >
+                Resume coming soon
+              </Button>
+            )}
           </motion.div>
         </motion.div>
 

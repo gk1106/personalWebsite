@@ -1,24 +1,35 @@
 import { Container } from "../components/ui/Container";
 import { SectionHeading } from "../components/ui/SectionHeading";
-import { GlassPanel } from "../components/ui/GlassPanel";
+import { ProjectCaseStudy } from "../components/work/ProjectCaseStudy";
+import { useScrollToHash } from "../hooks/useScrollToHash";
+import { useDocumentMeta } from "../hooks/useDocumentMeta";
 import { projects } from "../data/projects";
 
 export function WorkPage() {
+  useScrollToHash();
+
+  useDocumentMeta({
+    title: "Work — GaneshKumar (GK)",
+    description:
+      "Selected engineering projects by GaneshKumar (GK): InsuranceAI Agent, Jansamarth, and InsuranceHub.",
+  });
+
   return (
-    <Container className="flex flex-col gap-10 py-24">
-      <SectionHeading
-        eyebrow="Selected work"
-        title="Projects"
-        description="Full write-ups are in progress. Placeholder entries below reflect confirmed project names only."
-      />
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {projects.map((project) => (
-          <GlassPanel key={project.id} className="flex flex-col gap-2 p-6">
-            <h3 className="text-lg font-semibold text-foreground">{project.title}</h3>
-            <p className="text-sm text-muted-foreground">{project.summary}</p>
-          </GlassPanel>
+    <>
+      <Container className="flex flex-col gap-6 pt-20 lg:pt-28">
+        <SectionHeading
+          level="h1"
+          eyebrow="Selected work"
+          title="Things I've built."
+          description="From enterprise applications to AI-powered insurance workflows."
+        />
+      </Container>
+
+      <div className="flex flex-col divide-y divide-border">
+        {projects.map((project, index) => (
+          <ProjectCaseStudy key={project.id} project={project} index={index} />
         ))}
       </div>
-    </Container>
+    </>
   );
 }

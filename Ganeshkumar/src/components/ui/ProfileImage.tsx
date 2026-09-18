@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 interface ProfileImageProps {
   src?: string;
   initials?: string;
@@ -7,8 +9,9 @@ interface ProfileImageProps {
 }
 
 /**
- * Placeholder avatar. Renders an initials mark inside a glass ring until a
- * real profile photo is supplied — swap in `src` to render an <img> instead.
+ * Renders the supplied photo, cropped/positioned via object-cover, or an
+ * initials placeholder when no `src` is given — and falls back to the same
+ * placeholder if the image fails to load.
  */
 export function ProfileImage({
   src,
@@ -17,13 +20,21 @@ export function ProfileImage({
   size = 160,
   className = "",
 }: ProfileImageProps) {
+  const [imageFailed, setImageFailed] = useState(false);
+  const showImage = Boolean(src) && !imageFailed;
+
   return (
     <div
       className={`glass relative flex items-center justify-center overflow-hidden rounded-full border-primary/30 ${className}`}
       style={{ width: size, height: size }}
     >
-      {src ? (
-        <img src={src} alt={alt} className="h-full w-full object-cover" />
+      {showImage ? (
+        <img
+          src={src}
+          alt={alt}
+          className="h-full w-full object-cover"
+          onError={() => setImageFailed(true)}
+        />
       ) : (
         <span
           role="img"

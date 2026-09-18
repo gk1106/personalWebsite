@@ -1,0 +1,21 @@
+target/
+*.class
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.settings/
+.classpath
+.project
+
+# OS
+.DS_Store
+
+# Logs
+*.log
+
+# Env files with real secrets — never commit
+.env
+.env.*
+!.env.example

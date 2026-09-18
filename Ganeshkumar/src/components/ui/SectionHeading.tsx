@@ -3,6 +3,8 @@ interface SectionHeadingProps {
   title: string;
   description?: string;
   align?: "left" | "center";
+  /** Heading level for the title element. Defaults to h2 for use within a page's own h1. */
+  level?: "h1" | "h2";
   className?: string;
 }
 
@@ -11,9 +13,11 @@ export function SectionHeading({
   title,
   description,
   align = "left",
+  level = "h2",
   className = "",
 }: SectionHeadingProps) {
   const alignment = align === "center" ? "text-center items-center" : "text-left items-start";
+  const Heading = level;
 
   return (
     <div className={`flex flex-col gap-3 ${alignment} ${className}`}>
@@ -22,9 +26,9 @@ export function SectionHeading({
           {eyebrow}
         </span>
       )}
-      <h2 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+      <Heading className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
         {title}
-      </h2>
+      </Heading>
       {description && (
         <p className="max-w-2xl text-base text-muted-foreground">{description}</p>
       )}

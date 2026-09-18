@@ -1,14 +1,31 @@
-import { Container } from "../components/ui/Container";
-import { SectionHeading } from "../components/ui/SectionHeading";
+import { AboutHeader } from "../components/about/AboutHeader";
+import { AboutProfile } from "../components/about/AboutProfile";
+import { AboutJourney } from "../components/about/AboutJourney";
+import { AboutStack } from "../components/about/AboutStack";
+import { AboutExploring } from "../components/about/AboutExploring";
+import { AboutProjects } from "../components/about/AboutProjects";
+import { AboutContactCta } from "../components/about/AboutContactCta";
+import { useScrollToHash } from "../hooks/useScrollToHash";
+import { useDocumentMeta } from "../hooks/useDocumentMeta";
 
 export function AboutPage() {
+  useScrollToHash();
+
+  useDocumentMeta({
+    title: "About — GaneshKumar (GK)",
+    description:
+      "Java Engineer, AI Builder, Systems Thinker — background, engineering stack, and current projects.",
+  });
+
   return (
-    <Container className="flex flex-col gap-6 py-24">
-      <SectionHeading
-        eyebrow="About"
-        title="Java Engineer / AI Builder / Systems Thinker"
-        description="Full bio and engineering narrative are written in a later phase."
-      />
-    </Container>
+    <>
+      <AboutHeader />
+      <AboutProfile />
+      <AboutJourney />
+      <AboutStack />
+      <AboutExploring />
+      <AboutProjects />
+      <AboutContactCta />
+    </>
   );
 }

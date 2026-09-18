@@ -5,6 +5,7 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Container } from "../ui/Container";
 import { Button } from "../ui/Button";
 import { ThemeToggle } from "../ui/ThemeToggle";
+import { siteConfig } from "../../config/site";
 
 const navLinks = [
   { to: "/work", label: "WORK" },
@@ -29,7 +30,7 @@ export function Navbar() {
           className="font-mono text-lg font-semibold tracking-wide text-foreground"
           onClick={() => setIsOpen(false)}
         >
-          GK
+          {siteConfig.shortName}
         </NavLink>
 
         <ul className="hidden items-center gap-8 md:flex">
@@ -44,7 +45,7 @@ export function Navbar() {
 
         <div className="hidden items-center gap-3 md:flex">
           <ThemeToggle />
-          <Button variant="secondary" href="#contact" className="!px-4 !py-2 !text-xs">
+          <Button variant="secondary" to="/about#contact" className="!px-4 !py-2 !text-xs">
             CONTACT
           </Button>
         </div>
@@ -86,7 +87,7 @@ export function Navbar() {
               <li>
                 <Button
                   variant="secondary"
-                  href="#contact"
+                  to="/about#contact"
                   className="w-full"
                   onClick={() => setIsOpen(false)}
                 >

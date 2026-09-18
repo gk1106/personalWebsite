@@ -35,8 +35,8 @@ export function ProjectTeasers() {
               variants={item}
               whileHover={prefersReducedMotion ? undefined : { y: -4 }}
             >
-              {/* Detail routes (/work/:slug) aren't built yet — link to the Work page for now */}
-              <Link to="/work" className="group block h-full rounded-panel">
+              {/* Detail routes (/work/:slug) aren't built yet — deep-link to the project's section on /work */}
+              <Link to={`/work#${project.slug}`} className="group block h-full rounded-panel">
                 <GlassPanel className="flex h-full flex-col justify-between gap-10 p-8 transition-colors duration-300 group-hover:border-secondary/40 group-focus-visible:border-secondary/40">
                   <div className="flex items-start justify-between">
                     <span className="font-mono text-sm text-muted-foreground">

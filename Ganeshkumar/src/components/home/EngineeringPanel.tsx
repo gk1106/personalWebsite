@@ -17,8 +17,9 @@ export function EngineeringPanel() {
       <div className="flex items-center gap-4">
         <ProfileImage
           size={64}
+          src={siteConfig.profileImageSrc}
           initials={siteConfig.initials}
-          alt={`${siteConfig.name} profile placeholder`}
+          alt={siteConfig.profileImageSrc ? `Photo of ${siteConfig.name}` : `${siteConfig.name} profile placeholder`}
         />
         <div>
           <p className="font-mono text-xs uppercase tracking-[0.2em] text-primary">

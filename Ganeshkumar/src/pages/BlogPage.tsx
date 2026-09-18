@@ -1,30 +1,32 @@
 import { Container } from "../components/ui/Container";
 import { SectionHeading } from "../components/ui/SectionHeading";
 import { GlassPanel } from "../components/ui/GlassPanel";
-import { blogPosts } from "../data/blogPosts";
+import { BlogPostList } from "../components/blog/BlogPostList";
+import { BlogErrorState } from "../components/blog/BlogErrorState";
+import { useBlogPosts } from "../hooks/useBlogPosts";
+import { useDocumentMeta } from "../hooks/useDocumentMeta";
 
 export function BlogPage() {
+  const state = useBlogPosts();
+
+  useDocumentMeta({
+    title: "The Lab — GaneshKumar (GK)",
+    description: "Engineering notes on Java, Spring Boot, React, distributed systems and AI engineering.",
+  });
+
   return (
-    <Container className="flex flex-col gap-10 py-24">
+    <Container className="flex flex-col gap-16 py-20 lg:py-28">
       <SectionHeading
-        eyebrow="Writing"
-        title="Blog"
-        description="Posts will be served from a Spring Boot backend in a later phase."
+        level="h1"
+        eyebrow="The Lab"
+        title="Things I'm learning, building and exploring."
+        description="Notes on Java, Spring Boot, React, distributed systems and AI engineering."
       />
-      {blogPosts.length === 0 ? (
-        <GlassPanel className="p-6 text-sm text-muted-foreground">
-          No posts published yet.
-        </GlassPanel>
-      ) : (
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {blogPosts.map((post) => (
-            <GlassPanel key={post.id} className="flex flex-col gap-2 p-6">
-              <h3 className="text-lg font-semibold text-foreground">{post.title}</h3>
-              <p className="text-sm text-muted-foreground">{post.excerpt}</p>
-            </GlassPanel>
-          ))}
-        </div>
+      {state.status === "loading" && (
+        <GlassPanel className="p-6 text-sm text-muted-foreground">Loading notes…</GlassPanel>
       )}
+      {state.status === "error" && <BlogErrorState error={state.error} />}
+      {state.status === "ready" && <BlogPostList posts={state.posts} />}
     </Container>
   );
 }

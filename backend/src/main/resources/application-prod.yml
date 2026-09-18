@@ -1,0 +1,20 @@
+spring:
+  datasource:
+    # No defaults on purpose — startup must fail fast if these aren't set
+    # explicitly in the production environment.
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  jpa:
+    show-sql: false
+
+app:
+  jwt:
+    # No default on purpose — startup must fail fast without an explicit,
+    # production-grade JWT_SECRET (at least 32 bytes for HS256).
+    secret: ${JWT_SECRET}
+
+logging:
+  level:
+    root: WARN
+    com.gk.portfolio: INFO
