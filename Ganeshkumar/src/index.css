@@ -1,22 +1,75 @@
 @import "tailwindcss";
 
+/*
+ * Theme tokens live here as plain custom properties, redefined per theme.
+ * The @theme block below only maps Tailwind's semantic color utilities onto
+ * these variables — components consume `bg-background`, `text-foreground`,
+ * `bg-primary`, etc. and never hardcode a theme-specific color.
+ */
+:root {
+  --background: #f7fafc;
+  --background-elevated: #ffffff;
+  --surface: rgba(255, 255, 255, 0.65);
+  --surface-strong: rgba(255, 255, 255, 0.82);
+  --border: rgba(15, 23, 42, 0.1);
+  --border-strong: rgba(15, 23, 42, 0.16);
+
+  --foreground: #111827;
+  --muted-foreground: #64748b;
+
+  --primary: #38a8e8;
+  --primary-foreground: #0b1220;
+  --secondary: #70c7ff;
+  --secondary-foreground: #0b1220;
+
+  --grid-line: rgba(15, 23, 42, 0.055);
+  --glass-highlight: rgba(255, 255, 255, 0.5);
+  --glow-opacity: 7%;
+
+  color-scheme: light;
+}
+
+:root.dark {
+  --background: #07090b;
+  --background-elevated: #101014;
+  --surface: rgba(255, 255, 255, 0.035);
+  --surface-strong: rgba(255, 255, 255, 0.08);
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.16);
+
+  --foreground: #f5f5f5;
+  --muted-foreground: #9ca3af;
+
+  --primary: #f5b82e;
+  --primary-foreground: #07090b;
+  --secondary: #70c7ff;
+  --secondary-foreground: #07090b;
+
+  --grid-line: rgba(255, 255, 255, 0.06);
+  --glass-highlight: rgba(255, 255, 255, 0.06);
+  --glow-opacity: 16%;
+
+  color-scheme: dark;
+}
+
 @theme {
   /* Surfaces */
-  --color-background: #0a0a0c;
-  --color-background-elevated: #101014;
-  --color-surface: rgba(255, 255, 255, 0.05);
-  --color-border: rgba(255, 255, 255, 0.1);
-  --color-border-strong: rgba(255, 255, 255, 0.18);
+  --color-background: var(--background);
+  --color-background-elevated: var(--background-elevated);
+  --color-surface: var(--surface);
+  --color-surface-strong: var(--surface-strong);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
 
   /* Text */
-  --color-foreground: #f5f5f7;
-  --color-muted-foreground: #9aa1ac;
+  --color-foreground: var(--foreground);
+  --color-muted-foreground: var(--muted-foreground);
 
   /* Accents */
-  --color-primary: #e3b23c;
-  --color-primary-foreground: #0a0a0c;
-  --color-secondary: #3fb6e0;
-  --color-secondary-foreground: #0a0a0c;
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
 
   /* Type */
   --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -28,7 +81,6 @@
 
 @layer base {
   html {
-    color-scheme: dark;
     scroll-behavior: smooth;
   }
 
@@ -54,21 +106,29 @@
   /* Technical square-grid background, faded toward the edges */
   .bg-grid {
     background-image:
-      linear-gradient(to right, rgba(255, 255, 255, 0.06) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+      linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
     background-size: 44px 44px;
     background-position: center top;
     mask-image: radial-gradient(ellipse 85% 65% at 50% 0%, black 35%, transparent 100%);
     -webkit-mask-image: radial-gradient(ellipse 85% 65% at 50% 0%, black 35%, transparent 100%);
   }
 
-  /* Ambient glows: static, low-opacity, off-axis — deliberately not neon */
+  /* Ambient glows: static, low-opacity, off-axis — hue and intensity both follow the active theme */
   .glow-primary {
-    background: radial-gradient(circle, rgba(227, 178, 60, 0.16), transparent 70%);
+    background: radial-gradient(
+      circle,
+      color-mix(in srgb, var(--color-primary) var(--glow-opacity), transparent),
+      transparent 70%
+    );
   }
 
   .glow-secondary {
-    background: radial-gradient(circle, rgba(63, 182, 224, 0.13), transparent 70%);
+    background: radial-gradient(
+      circle,
+      color-mix(in srgb, var(--color-secondary) var(--glow-opacity), transparent),
+      transparent 70%
+    );
   }
 
   .glass {
@@ -76,6 +136,7 @@
     border: 1px solid var(--color-border);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
+    box-shadow: inset 0 1px 0 var(--glass-highlight);
   }
 }
 

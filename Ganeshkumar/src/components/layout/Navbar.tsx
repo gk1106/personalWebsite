@@ -4,6 +4,7 @@ import { Menu, X } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Container } from "../ui/Container";
 import { Button } from "../ui/Button";
+import { ThemeToggle } from "../ui/ThemeToggle";
 
 const navLinks = [
   { to: "/work", label: "WORK" },
@@ -41,7 +42,8 @@ export function Navbar() {
           ))}
         </ul>
 
-        <div className="hidden md:block">
+        <div className="hidden items-center gap-3 md:flex">
+          <ThemeToggle />
           <Button variant="secondary" href="#contact" className="!px-4 !py-2 !text-xs">
             CONTACT
           </Button>
@@ -77,6 +79,10 @@ export function Navbar() {
                   </NavLink>
                 </li>
               ))}
+              <li className="flex items-center justify-between">
+                <span className="font-mono text-sm tracking-wide text-muted-foreground">THEME</span>
+                <ThemeToggle />
+              </li>
               <li>
                 <Button
                   variant="secondary"
