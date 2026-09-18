@@ -1,0 +1,97 @@
+@import "tailwindcss";
+
+@theme {
+  /* Surfaces */
+  --color-background: #0a0a0c;
+  --color-background-elevated: #101014;
+  --color-surface: rgba(255, 255, 255, 0.05);
+  --color-border: rgba(255, 255, 255, 0.1);
+  --color-border-strong: rgba(255, 255, 255, 0.18);
+
+  /* Text */
+  --color-foreground: #f5f5f7;
+  --color-muted-foreground: #9aa1ac;
+
+  /* Accents */
+  --color-primary: #e3b23c;
+  --color-primary-foreground: #0a0a0c;
+  --color-secondary: #3fb6e0;
+  --color-secondary-foreground: #0a0a0c;
+
+  /* Type */
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+
+  /* Shape */
+  --radius-panel: 1rem;
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    min-height: 100svh;
+  }
+
+  ::selection {
+    background-color: var(--color-primary);
+    color: var(--color-primary-foreground);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-secondary);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+}
+
+@layer components {
+  /* Technical square-grid background, faded toward the edges */
+  .bg-grid {
+    background-image:
+      linear-gradient(to right, rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+    background-size: 44px 44px;
+    background-position: center top;
+    mask-image: radial-gradient(ellipse 85% 65% at 50% 0%, black 35%, transparent 100%);
+    -webkit-mask-image: radial-gradient(ellipse 85% 65% at 50% 0%, black 35%, transparent 100%);
+  }
+
+  /* Ambient glows: static, low-opacity, off-axis — deliberately not neon */
+  .glow-primary {
+    background: radial-gradient(circle, rgba(227, 178, 60, 0.16), transparent 70%);
+  }
+
+  .glow-secondary {
+    background: radial-gradient(circle, rgba(63, 182, 224, 0.13), transparent 70%);
+  }
+
+  .glass {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+}
+
+/* Unlayered so it always wins over the layers above, regardless of source order */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

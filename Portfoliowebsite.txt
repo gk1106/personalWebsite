@@ -1,0 +1,16 @@
+https://github.com/gk1106/gk_personal_portfolio_fronend.git
+
+
+git remote add origin https://github.com/gk1106/gk_personal_portfolio_fronend.git
+git branch -M main
+git push -u origin main
+
+
+backend:
+
+https://github.com/gk1106/gk_personal_portfolio_backend.git
+
+
+git remote add origin https://github.com/gk1106/gk_personal_portfolio_backend.git
+git branch -M main
+git push -u origin main
