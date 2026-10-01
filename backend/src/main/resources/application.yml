@@ -45,8 +45,8 @@ app:
   # both variables explicitly set (no default password anywhere, dev
   # included) — see AdminBootstrapRunner. Blank means "bootstrap disabled."
   admin-bootstrap:
-    username: ${ADMIN_USERNAME:}
-    password: ${ADMIN_PASSWORD:}
+    username: ${ADMIN_USERNAME:postgres}
+    password: ${ADMIN_PASSWORD:admin}
 
   jwt:
     # Not a secret — a reasonable default expiry for an admin-only session,

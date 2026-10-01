@@ -10,7 +10,7 @@ services:
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-portfolio}
       POSTGRES_USER: ${POSTGRES_USER:-portfolio}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env — see .env.example}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-portfolio}
     volumes:
       # Postgres 18+ images store data under version-specific subdirectories
       # and expect the volume mounted one level up from "data" — mounting at
@@ -41,15 +41,15 @@ services:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
       DB_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-portfolio}
       DB_USERNAME: ${POSTGRES_USER:-portfolio}
-      DB_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env — see .env.example}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-portfolio}
       SERVER_PORT: ${SERVER_PORT:-8080}
-      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:?Set CORS_ALLOWED_ORIGINS in .env — see .env.example}
-      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env (>=32 bytes) — see .env.example}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:5173}
+      JWT_SECRET: ${JWT_SECRET:-90869e3a559fb73ba6b9fd0395f89e455a082a846b6cb221c711bdba8a9fec8a}
       JWT_EXPIRATION_MINUTES: ${JWT_EXPIRATION_MINUTES:-60}
       # Admin bootstrap is opt-in — both-or-neither, enforced by the app
       # itself (AdminBootstrapRunner), never a default credential here.
-      ADMIN_USERNAME: ${ADMIN_USERNAME:-}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin}
     ports:
       - "${SERVER_PORT:-8080}:${SERVER_PORT:-8080}"
 

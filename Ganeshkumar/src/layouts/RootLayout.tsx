@@ -3,6 +3,7 @@ import { GridBackground } from "../components/ui/GridBackground";
 import { Navbar } from "../components/layout/Navbar";
 import { Footer } from "../components/layout/Footer";
 import { ScrollToTop } from "../components/layout/ScrollToTop";
+import { PortfolioChat } from "../components/chat/PortfolioChat";
 
 export function RootLayout() {
   return (
@@ -23,6 +24,7 @@ export function RootLayout() {
       </main>
 
       <Footer />
+      <PortfolioChat />
     </div>
   );
 }
