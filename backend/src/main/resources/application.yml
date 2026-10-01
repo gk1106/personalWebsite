@@ -25,6 +25,15 @@ spring:
   jackson:
     time-zone: UTC
 
+  ai:
+    openai:
+      chat:
+        options:
+          # Not a secret — just which OpenAI model the portfolio assistant
+          # calls. The API key itself is configured per-profile below,
+          # alongside the other required/optional secrets.
+          model: ${OPENAI_MODEL:gpt-4o-mini}
+
 server:
   port: ${SERVER_PORT:8080}
 

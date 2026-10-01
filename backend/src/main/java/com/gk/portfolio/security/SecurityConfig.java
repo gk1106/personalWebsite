@@ -13,8 +13,9 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfigurationSource;
 
 /**
- * Stateless JWT authentication. Login (POST /api/auth/login) and public blog
- * reads are open; everything under /api/admin/** requires a valid JWT whose
+ * Stateless JWT authentication. Login (POST /api/auth/login), public blog
+ * reads, and the public chat assistant (POST /api/chat) are open; everything
+ * under /api/admin/** requires a valid JWT whose
  * role claim is ADMIN. Everything not explicitly listed is denied by
  * default. CSRF stays disabled — this is a stateless JSON API authenticated
  * via the Authorization header, not cookies/sessions.
@@ -53,6 +54,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/blog").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/blog/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/chat").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().denyAll()
                 )

@@ -18,6 +18,13 @@ spring:
     connect-retries: 5
     connect-retries-interval: 5s
 
+  ai:
+    openai:
+      # No default on purpose — same fail-fast rule as datasource/JWT above:
+      # startup must not silently proceed without a real, production
+      # OpenAI key explicitly set in Render's environment.
+      api-key: ${OPENAI_API_KEY}
+
 app:
   jwt:
     # No default on purpose — startup must fail fast without an explicit,

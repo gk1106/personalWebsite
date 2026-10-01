@@ -8,6 +8,17 @@ spring:
   jpa:
     show-sql: true
 
+  ai:
+    openai:
+      # Dev/CI-only placeholder — never a real key. Spring AI's OpenAI
+      # autoconfiguration needs a non-blank api-key to build its client bean
+      # at startup, but nothing in dev or in the test suite ever calls the
+      # real OpenAI API (the chat layer is mocked in tests), so this value
+      # never needs to work — it just needs to exist so the context loads
+      # without OPENAI_API_KEY being set. Prod has no default (see
+      # application-prod.yml) and fails fast without a real key.
+      api-key: ${OPENAI_API_KEY:sk-dev-placeholder-not-a-real-openai-key}
+
 app:
   jwt:
     # Dev-only fallback — long enough for HS256 (>=32 bytes) but must never

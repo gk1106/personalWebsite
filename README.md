@@ -287,7 +287,12 @@ Container
 The production container runs as a non-root user and exposes a health endpoint:
 GET /api/health
 
-8. Deployment
+8. Portfolio AI Chat Assistant
+A public, unauthenticated chat endpoint backed by Spring AI (ChatClient + OpenAI + tool calling):
+POST /api/chat
+
+The assistant answers questions only about Ganesh Kumar — his experience, skills, projects, education, and blog — using a fixed set of read-only tools over curated portfolio data. Anything outside that scope is refused with a fixed message rather than answered. See backend/README.md for request/response format and configuration.
+9. Deployment
 Frontend
 Deployed on Vercel.
 https://ganeshkumarv.vercel.app
@@ -331,6 +336,8 @@ GET /api/health
 GET /api/blog?page=0&size=10
 
 GET /api/blog/{slug}
+
+POST /api/chat
 
 Authentication
 POST /api/auth/login
@@ -398,6 +405,8 @@ JWT_EXPIRATION_MINUTES
 ADMIN_USERNAME
 ADMIN_PASSWORD
 CORS_ALLOWED_ORIGINS
+OPENAI_API_KEY
+OPENAI_MODEL
 
 
 About Me

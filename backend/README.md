@@ -25,6 +25,8 @@ for what's still not built.
 | `JWT_EXPIRATION_MINUTES` | Access token lifetime, in minutes | `60` | optional (60 is a reasonable prod value too) |
 | `ADMIN_USERNAME` | Bootstrap admin username (one-time) | unset (bootstrap disabled) | optional — see [Admin bootstrap](#admin-bootstrap) |
 | `ADMIN_PASSWORD` | Bootstrap admin password (one-time, plaintext input only) | unset (bootstrap disabled) | optional — see [Admin bootstrap](#admin-bootstrap) |
+| `OPENAI_API_KEY` | OpenAI API key used by the portfolio chat assistant | internal placeholder, never a real key (see [Portfolio chat assistant](#portfolio-chat-assistant)) | yes, no default — startup fails without it |
+| `OPENAI_MODEL` | OpenAI chat model the assistant calls | `gpt-4o-mini` | optional |
 
 No password, secret, or credential is hardcoded anywhere in this repository.
 `application-prod.yml` intentionally has **no fallback defaults** for the
@@ -254,6 +256,7 @@ query string or cookie is ignored and treated as no token at all.
 | POST | `/api/auth/login` | public | Admin login → JWT |
 | GET | `/api/blog` | public | Paginated list of **published** blog posts, newest first |
 | GET | `/api/blog/{slug}` | public | A single **published** blog post |
+| POST | `/api/chat` | public | Portfolio AI chat assistant — see [Portfolio chat assistant](#portfolio-chat-assistant) |
 | GET | `/api/admin/blog` | admin | Paginated list of **all** blog posts (draft + published) |
 | GET | `/api/admin/blog/{id}` | admin | Full editable representation of one post |
 | POST | `/api/admin/blog` | admin | Create a post |
@@ -402,6 +405,77 @@ that ever stops being true.
 `GET`/`PUT`/`DELETE`/`PATCH` against a nonexistent `id` all return `404`, in
 the same `ApiError` shape used elsewhere.
 
+## Portfolio chat assistant
+
+A public, unauthenticated AI assistant that answers questions **only** about
+Ganesh Kumar — his experience, education, skills, projects, and blog
+articles. It is not a general-purpose chatbot: anything outside that scope
+(weather, general programming tutorials, other people, general knowledge,
+etc.) is refused with a fixed message, not answered. The scope rules live in
+one centralized system prompt (`PortfolioAssistantPrompt`) sent to the model
+on every request.
+
+Built with [Spring AI](https://spring.io/projects/spring-ai) (`ChatClient` +
+OpenAI + tool calling): `ChatController` → `ChatService` → `ChatClient` →
+`PortfolioTools`. `PortfolioTools` exposes a fixed set of read-only tools
+(`getProfile`, `getSkills`, `getExperience`, `getEducation`, `getProjects`,
+`getProject`, `getBlogPosts`) backed by curated portfolio data (mirroring the
+frontend's own `Ganeshkumar/src/data/*.ts` / `src/config/site.ts`) and the
+existing `BlogService` for published posts — there is no tool that can run
+SQL, call the internet, execute code, or touch the filesystem, so the model
+can only ever read this fixed data.
+
+### `POST /api/chat`
+
+Public — no JWT required. Request:
+
+```json
+{ "message": "Tell me about Ganesh's projects" }
+```
+
+`message` must be non-blank and at most 2000 characters; an invalid request
+returns the same `400` `ApiError` shape used elsewhere in this API.
+
+Response (`200`):
+
+```json
+{ "answer": "Ganesh has built InsuranceAI Agent, Jansamarth, and InsuranceHub..." }
+```
+
+Example of an out-of-scope question:
+
+```json
+{ "message": "What is the weather today?" }
+```
+
+```json
+{ "answer": "I can only answer questions about Ganesh Kumar, his experience, projects, skills, and portfolio." }
+```
+
+### Configuration
+
+| Variable | Purpose |
+|---|---|
+| `OPENAI_API_KEY` | OpenAI API key. Required in prod (no default — fails fast, same as `JWT_SECRET`/`DB_*`). Dev/CI use a clearly-labeled internal placeholder so the app starts and the test suite runs without a real key or any call to OpenAI. |
+| `OPENAI_MODEL` | OpenAI chat model (`spring.ai.openai.chat.options.model`). Defaults to `gpt-4o-mini`, an inexpensive model suitable for a portfolio assistant. |
+
+### Security considerations
+
+- No conversation memory and no RAG/vector store (intentionally out of scope
+  for this first version) — each request is independent.
+- The model never has database or filesystem access — only the fixed
+  `PortfolioTools` methods above.
+- On any AI-layer failure (OpenAI error, timeout, etc.), the real exception
+  is logged server-side only; the client receives a generic `503`:
+  `{ "message": "Sorry, the portfolio assistant is temporarily unavailable. Please try again later." }`
+  — never a raw OpenAI exception or stack trace.
+- The user's message is never logged in full.
+- The system prompt explicitly instructs the model never to reveal its own
+  instructions, tool implementation details, API keys, environment
+  variables, credentials, or internal configuration.
+- CORS for this endpoint is governed by the same `CORS_ALLOWED_ORIGINS`
+  configuration as the rest of the API — no wildcard origin.
+
 ## Project structure
 
 ```
@@ -412,17 +486,19 @@ backend/
 └── src/
     ├── main/java/com/gk/portfolio/
     │   ├── PortfolioBackendApplication.java
-    │   ├── config/        CorsConfig, AdminBootstrapRunner
-    │   ├── controller/    HealthController, AuthController, BlogController, AdminBlogController
+    │   ├── ai/            PortfolioAssistantPrompt, PortfolioTools
+    │   ├── config/        CorsConfig, AdminBootstrapRunner, ChatClientConfig
+    │   ├── controller/    HealthController, AuthController, BlogController, AdminBlogController, ChatController
     │   ├── dto/           BlogPostResponse, AdminBlogPostResponse, PageResponse,
-    │   │                  LoginRequest, LoginResponse, BlogPostCreateRequest, BlogPostUpdateRequest
+    │   │                  LoginRequest, LoginResponse, BlogPostCreateRequest, BlogPostUpdateRequest,
+    │   │                  ChatRequest, ChatResponse
     │   ├── entity/        BlogPost, BlogPostStatus, AdminUser, AdminRole
     │   ├── exception/     ApiError, GlobalExceptionHandler, ResourceNotFoundException,
-    │   │                  DuplicateSlugException, InvalidCredentialsException
+    │   │                  DuplicateSlugException, InvalidCredentialsException, ChatAssistantException
     │   ├── repository/    BlogPostRepository, AdminUserRepository
     │   ├── security/      SecurityConfig, JwtService, JwtAuthenticationFilter,
     │   │                  JwtAuthenticationEntryPoint (401), JwtAccessDeniedHandler (403)
-    │   └── service/       BlogService, AuthService
+    │   └── service/       BlogService, AuthService, ChatService
     └── main/resources/
         ├── application.yml, application-dev.yml, application-prod.yml
         └── db/migration/
@@ -533,18 +609,23 @@ Verified locally via an OPTIONS preflight request returning the expected
 | `AuthControllerIntegrationTest` | `@SpringBootTest` + `MockMvc` (real DB) | Valid login → JWT; wrong password / unknown username → identical generic `401`; password/hash never in the response |
 | `AdminSecurityIntegrationTest` | `@SpringBootTest` + `MockMvc` (real DB) | No token / malformed / wrong signature / expired → `401`; valid admin token → `200`; wrong role → `403`; token in query param or cookie is ignored (still `401`); JWT never appears in application logs (verified with a Logback `ListAppender`, not just by inspection) |
 | `AdminBlogControllerIntegrationTest` | `@SpringBootTest` + `MockMvc` (real DB) | Create draft/published, update, duplicate slug → `409`, publish sets `publishedAt`, draft preserves it, delete → `404` after, nonexistent `id` → `404`, admin list pagination, slug-format/required-field validation → `400` |
+| `ProdFlywayRetryConfigTest` | Unit (pure property binding, no Spring context, no DB) | `application-prod.yml`'s `spring.flyway.connect-retries`/`connect-retries-interval` bind correctly |
+| `PortfolioAssistantPromptTest` | Unit | The centralized system prompt declares the portfolio-only scope and the exact refusal/not-available sentences |
+| `PortfolioToolsTest` | Unit (Mockito for `BlogService`) | Each portfolio tool returns the expected curated data; unknown project name → not-found message; no published posts → explicit message |
+| `ChatServiceTest` | Unit (Mockito for `ChatClient`) | Happy path returns the model's content; an AI-layer failure is wrapped as `ChatAssistantException`, never leaked |
+| `ChatControllerIntegrationTest` | `@SpringBootTest` + `MockMvc` (`ChatService` mocked via `@MockitoBean`) | Public access, `200` with answer, blank/over-length message → `400`, AI failure → `503` with the generic safe message |
 
-**All of the above were genuinely run against a real local PostgreSQL 18
-instance** (not skipped or faked) — `./mvnw test` passed **61/61** with the
-schema, repository queries, service mapping, full JWT lifecycle, and full
-HTTP round-trips (including a real login → real BCrypt check → real signed
-JWT → real authorization decision) all verified end to end, no mocking of
-Spring Security itself. Data written by these tests is rolled back
-automatically (`@Transactional` / `@DataJpaTest` defaults) so no test data
-is left behind. If no PostgreSQL instance is reachable in your environment,
-every `@SpringBootTest`/`@DataJpaTest` class above will fail at context
-startup (none mock or fall back to an in-memory database) — that failure
-means "no database available," not a code defect.
+**The blog/auth/admin tests above were genuinely run against a real local
+PostgreSQL 18 instance** (not skipped or faked) — none mock or fall back to
+an in-memory database, so if no PostgreSQL instance is reachable in your
+environment every `@SpringBootTest`/`@DataJpaTest` class will fail at context
+startup; that failure means "no database available," not a code defect. Data
+written by these tests is rolled back automatically (`@Transactional` /
+`@DataJpaTest` defaults). The chat-assistant tests are unit tests with the
+`ChatClient`/`ChatService` mocked — **none of them call the real OpenAI
+API** — so `OPENAI_API_KEY` never needs to be a real key to run the suite.
+`./mvnw test` passes **79/79** (61 pre-existing + `ProdFlywayRetryConfigTest`
++ the four chat-assistant classes above).
 
 One test scenario from the original checklist doesn't apply: "wrong role →
 403" is tested by hand-crafting a JWT with a non-`ADMIN` role claim (proving
@@ -556,13 +637,14 @@ not build a complicated RBAC system."
 
 **Implemented:** everything from the previous phase, plus JWT-based admin
 authentication (`POST /api/auth/login`), the `admin_users` table and
-bootstrap mechanism, and full blog CRUD + publish/draft workflow under
-`/api/admin/blog/**`, all gated behind a real Spring Security filter chain
-(not a stub).
+bootstrap mechanism, full blog CRUD + publish/draft workflow under
+`/api/admin/blog/**` (all gated behind a real Spring Security filter chain,
+not a stub), and a public portfolio AI chat assistant (`POST /api/chat`,
+Spring AI + OpenAI + tool calling — see
+[Portfolio chat assistant](#portfolio-chat-assistant)).
 
 **Not implemented yet (planned, later phases):**
 - A refresh-token flow (access-token-only is intentional for now)
 - Contact form handling
-- AI portfolio assistant / RAG / MCP endpoints
-- Actual cloud deployment (Docker + Compose exist and are verified locally — see [Docker](#docker) — but nothing is deployed anywhere yet)
+- Conversation memory and RAG/vector search for the chat assistant, and MCP
 - React admin UI (this phase is API-only, per scope)

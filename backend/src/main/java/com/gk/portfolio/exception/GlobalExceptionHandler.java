@@ -38,6 +38,13 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.UNAUTHORIZED, ex.getMessage(), request);
     }
 
+    /** The real cause (OpenAI/Spring AI exception) is logged by ChatService, never echoed here. */
+    @ExceptionHandler(ChatAssistantException.class)
+    public ResponseEntity<ApiError> handleChatAssistantUnavailable(ChatAssistantException ex, HttpServletRequest request) {
+        return build(HttpStatus.SERVICE_UNAVAILABLE,
+                "Sorry, the portfolio assistant is temporarily unavailable. Please try again later.", request);
+    }
+
     /** Defensive backstop for a slug/username race that slips past the existsBy... check — never leaks SQL. */
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ApiError> handleDataIntegrityViolation(DataIntegrityViolationException ex, HttpServletRequest request) {
