@@ -40,9 +40,45 @@ is no local/demo blog data bundled anymore.
 The backend's `CORS_ALLOWED_ORIGINS` env var must include this app's dev
 origin (`http://localhost:5173` by default) — see `backend/README.md`.
 
-Only `GET /api/blog` and `GET /api/blog/{slug}` are used (public, no
-authentication) — the admin API and its JWT are not touched by this
-frontend yet.
+The public Blog pages use `GET /api/blog` and `GET /api/blog/{slug}` only —
+public, no authentication, no JWT ever attached.
+
+## Admin CMS
+
+A small admin area lives at `/admin` for managing blog posts — separate
+layout, separate auth, no shared chrome with the public site.
+
+| Route | Purpose |
+|---|---|
+| `/admin/login` | Sign in with an admin account (created via the backend's bootstrap — see `backend/README.md`) |
+| `/admin` | Dashboard: post counts, create/edit/publish/draft/delete |
+| `/admin/blog/new` | Create a post (Markdown editor + live preview) |
+| `/admin/blog/:id/edit` | Edit a post |
+
+**Auth model**: `POST /api/auth/login` returns a JWT, stored in
+`sessionStorage` (never `localStorage`, never in a URL) under
+`gk_admin_token` — tab-scoped, so it survives a refresh but not a new tab.
+Every `/api/admin/**` request attaches `Authorization: Bearer <token>`
+(`src/services/adminBlogService.ts`); public blog requests never do
+(`src/services/blogService.ts` has no knowledge of the token at all — the
+two service files are fully decoupled). A `401` from any admin request
+clears the token and redirects to `/admin/login`; a `403` shows an
+access-denied state instead of logging you out. No new environment
+variables are needed beyond `VITE_API_BASE_URL` above — the admin API lives
+on the same backend origin.
+
+**Editor**: posts are authored as Markdown (`contentMarkdown`, matching
+what the backend stores) — not the `ArticleBlock[]` structured format the
+public renderer uses internally. The preview pane reuses the same
+`markdownToBlocks` conversion and `ArticleContent` component the public
+blog detail page renders with, so what you see in the editor is what
+publishing will actually look like. Publish/draft state is changed only
+through the dedicated publish/draft actions (dashboard row buttons, or the
+status toggle on the edit page) — the create/update form itself never sends
+an arbitrary status.
+
+The backend remains the sole authority on what's allowed — this frontend
+gate is a UX convenience, not a security boundary.
 
 Currently, two official plugins are available:
 
