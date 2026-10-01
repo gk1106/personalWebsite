@@ -7,6 +7,16 @@ spring:
     password: ${DB_PASSWORD}
   jpa:
     show-sql: false
+  flyway:
+    # Render cold starts can race a transient SSL handshake failure against
+    # Supabase's Session Pooler on Flyway's very first connection attempt at
+    # startup (observed: "SSL error: Remote host terminated the handshake").
+    # A handful of short retries absorbs that without masking a real
+    # misconfiguration — if the database is genuinely unreachable or the
+    # credentials are wrong, this still fails after ~25s, not silently hangs.
+    # Prod only: a transient cold-start blip isn't expected locally.
+    connect-retries: 5
+    connect-retries-interval: 5s
 
 app:
   jwt:
