@@ -70,6 +70,50 @@ If your Postgres isn't on the default host/port/db, override via env vars, e.g.:
 DB_URL=jdbc:postgresql://localhost:5555/portfolio_dev DB_USERNAME=portfolio_dev DB_PASSWORD=portfolio_dev ./mvnw spring-boot:run
 ```
 
+## Docker
+
+For a full local stack (Postgres + backend, both containerized) or as the
+basis for a real deployment:
+
+```sh
+cp .env.example .env
+# edit .env — at minimum set POSTGRES_PASSWORD, CORS_ALLOWED_ORIGINS, JWT_SECRET
+docker compose up -d --build
+curl http://localhost:8080/api/health   # or whatever SERVER_PORT you set
+```
+
+`.env` is gitignored (only `.env.example` is committed) — `docker compose`
+reads it automatically and refuses to start (`POSTGRES_PASSWORD`/
+`CORS_ALLOWED_ORIGINS`/`JWT_SECRET` all use the `${VAR:?message}` syntax) if
+any of those three aren't set. `ADMIN_USERNAME`/`ADMIN_PASSWORD` behave
+exactly as described in [Admin bootstrap](#admin-bootstrap) below — optional,
+both-or-neither.
+
+What's in it:
+- **`Dockerfile`** — multi-stage: builds the jar with the official `maven`
+  image (dependencies cached in their own layer), then runs it on a slim
+  `eclipse-temurin:17-jre` base as a non-root user, with a `HEALTHCHECK`
+  against `/api/health`. Tests are **not** run during the image build (they
+  need a live Postgres — see [Tests](#tests)) — run `./mvnw test` yourself
+  before building if you want that guarantee.
+- **`docker-compose.yml`** — a `db` service (`postgres:18`, named volume for
+  persistence, `pg_isready` healthcheck) and a `backend` service that only
+  starts once `db` reports healthy. Uses an explicit top-level `name:` so
+  its containers/network/volume never collide with some other
+  docker-compose project that also happens to live in a directory called
+  "backend" (a real collision discovered while testing this).
+- **`.env.example`** — every variable the compose file reads, documented.
+
+Verified end-to-end against this exact setup: schema migrated (Flyway),
+admin bootstrap ran and logged in successfully, CORS preflight succeeded,
+and data (posts + the bootstrapped admin account) survived a full
+`docker compose restart`.
+
+> **Postgres 18 note**: its image changed where it expects data on disk —
+> the named volume is mounted at `/var/lib/postgresql` (not
+> `.../postgresql/data`, the pre-18 convention). Mounting at the old path
+> makes the container refuse to start against existing data.
+
 ## Flyway
 
 Flyway is the **single source of truth** for schema changes —
@@ -331,6 +375,7 @@ the same `ApiError` shape used elsewhere.
 backend/
 ├── pom.xml
 ├── mvnw, mvnw.cmd, .mvn/          Maven Wrapper (no global Maven needed)
+├── Dockerfile, docker-compose.yml, .env.example, .dockerignore
 └── src/
     ├── main/java/com/gk/portfolio/
     │   ├── PortfolioBackendApplication.java
@@ -486,5 +531,5 @@ bootstrap mechanism, and full blog CRUD + publish/draft workflow under
 - A refresh-token flow (access-token-only is intentional for now)
 - Contact form handling
 - AI portfolio assistant / RAG / MCP endpoints
-- Docker / production deployment configuration
+- Actual cloud deployment (Docker + Compose exist and are verified locally — see [Docker](#docker) — but nothing is deployed anywhere yet)
 - React admin UI (this phase is API-only, per scope)

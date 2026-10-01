@@ -1,0 +1,57 @@
+# Explicit project name — prevents this stack's network/volume/container
+# names from colliding with any other docker-compose project that also
+# happens to be run from a directory named "backend".
+name: portfolio-backend
+
+services:
+  db:
+    image: postgres:18
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-portfolio}
+      POSTGRES_USER: ${POSTGRES_USER:-portfolio}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env — see .env.example}
+    volumes:
+      # Postgres 18+ images store data under version-specific subdirectories
+      # and expect the volume mounted one level up from "data" — mounting at
+      # .../data directly (the pre-18 convention) makes the image refuse to
+      # start against it.
+      - postgres_data:/var/lib/postgresql
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-portfolio} -d ${POSTGRES_DB:-portfolio}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      # Flyway owns the schema either way — see application-*.yml — so this
+      # just picks which profile's logging/defaults apply. Defaults to prod
+      # since this compose file is meant for a real deployment; everything
+      # genuinely secret below is required (:?), not defaulted.
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
+      DB_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-portfolio}
+      DB_USERNAME: ${POSTGRES_USER:-portfolio}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env — see .env.example}
+      SERVER_PORT: ${SERVER_PORT:-8080}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:?Set CORS_ALLOWED_ORIGINS in .env — see .env.example}
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env (>=32 bytes) — see .env.example}
+      JWT_EXPIRATION_MINUTES: ${JWT_EXPIRATION_MINUTES:-60}
+      # Admin bootstrap is opt-in — both-or-neither, enforced by the app
+      # itself (AdminBootstrapRunner), never a default credential here.
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+    ports:
+      - "${SERVER_PORT:-8080}:${SERVER_PORT:-8080}"
+
+volumes:
+  postgres_data:

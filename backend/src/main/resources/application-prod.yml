@@ -13,6 +13,10 @@ app:
     # No default on purpose — startup must fail fast without an explicit,
     # production-grade JWT_SECRET (at least 32 bytes for HS256).
     secret: ${JWT_SECRET}
+  cors:
+    # No trailing slash — the browser's Origin header never includes one, so
+    # a trailing slash here would silently never match and break CORS.
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:https://ganeshkumarv.vercel.app}
 
 logging:
   level:
