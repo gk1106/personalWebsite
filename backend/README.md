@@ -114,6 +114,39 @@ and data (posts + the bootstrapped admin account) survived a full
 > `.../postgresql/data`, the pre-18 convention). Mounting at the old path
 > makes the container refuse to start against existing data.
 
+## Keep-alive (Render Free tier cold starts)
+
+The production backend runs on Render's **Free** plan, which puts the
+service to sleep after a period of inactivity. The next request then pays a
+~1–2 minute cold-start cost (container boot + JVM startup + Flyway) before
+it responds.
+
+To reduce how often that happens, configure an **external** scheduled HTTP
+check against the health endpoint, roughly every 14 minutes (comfortably
+under typical free-tier inactivity timeouts) — a plain `GET` request from
+outside the app:
+
+```
+GET https://<your-render-service>.onrender.com/api/health
+```
+
+**This is deliberately not implemented inside the application** — no
+`@Scheduled` job, no self-calling HTTP client, no background thread, and
+`/api/health` itself stays a trivial, dependency-free `{"status":"UP"}`
+(see `HealthController`) with no DB query added to it just for this. A
+periodic outbound ping is an *infrastructure* concern, not something that
+belongs inside the service being pinged — set it up with any free external
+uptime/cron service (e.g. cron-job.org, UptimeRobot, or GitHub Actions'
+`schedule` trigger), pointed at the URL above on a ~14-minute interval.
+This project doesn't prescribe or configure one for you — pick whichever
+free tool you're comfortable with and point it at the URL above.
+
+**This is a mitigation, not a guarantee.** The external scheduler itself
+can be delayed, rate-limited, or occasionally fail to run — a cold start can
+still happen (e.g. right after a deploy, or if the ping is missed). It
+reduces how *often* users hit a cold start; it doesn't eliminate the
+possibility.
+
 ## Flyway
 
 Flyway is the **single source of truth** for schema changes —
