@@ -19,3 +19,8 @@ target/
 .env
 .env.*
 !.env.example
+# Ignore all YAML files
+*.yml
+*.yaml
+
+serverdeploy
