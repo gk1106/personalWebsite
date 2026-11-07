@@ -3,7 +3,7 @@ import { Routes, Route } from "react-router-dom";
 import { RootLayout } from "./layouts/RootLayout";
 import { AdminLayout } from "./layouts/AdminLayout";
 import { RequireAdminAuth } from "./components/admin/RequireAdminAuth";
-import { Analytics } from "@vercel/analytics/next"
+
 
 const HomePage = lazy(() => import("./pages/HomePage").then((m) => ({ default: m.HomePage })));
 const WorkPage = lazy(() => import("./pages/WorkPage").then((m) => ({ default: m.WorkPage })));
@@ -48,7 +48,6 @@ function App() {
           </Route>
         </Route>
       </Routes>
-      <Analytics />
     </Suspense>
   );
 }
