@@ -1,5 +1,6 @@
 import { lazy, Suspense } from "react";
 import { Routes, Route } from "react-router-dom";
+import { Analytics } from "@vercel/analytics/react";
 import { RootLayout } from "./layouts/RootLayout";
 import { AdminLayout } from "./layouts/AdminLayout";
 import { RequireAdminAuth } from "./components/admin/RequireAdminAuth";
@@ -48,6 +49,7 @@ function App() {
           </Route>
         </Route>
       </Routes>
+      <Analytics />
     </Suspense>
   );
 }
