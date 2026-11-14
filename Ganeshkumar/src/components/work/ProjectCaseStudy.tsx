@@ -92,10 +92,12 @@ export function ProjectCaseStudy({ project, index }: ProjectCaseStudyProps) {
           <motion.div variants={item}>
             {/* Detail routes (/work/:slug) aren't built yet — jump within this same section for now */}
             <a
-              href={`#${project.slug}`}
+              href={project.links?.live ?? `#${project.slug}`}
+              target={project.links?.live ? "_blank" : undefined}
+              rel={project.links?.live ? "noopener noreferrer" : undefined}
               className="inline-flex min-h-11 items-center gap-2 rounded-full font-mono text-xs uppercase tracking-[0.2em] text-primary transition-[gap] duration-200 hover:gap-3"
             >
-              Case study <span aria-hidden="true">→</span>
+              {project.links?.live ? "View live project" : "Case study"} <span aria-hidden="true">→</span>
             </a>
           </motion.div>
         </motion.div>

@@ -8,6 +8,7 @@ export const projects: Project[] = [
     id: "insurance-ai-agent",
     slug: "insurance-ai-agent",
     title: "InsuranceAI Agent",
+    links: { live: "https://insurance.gkbuilds.in/" },
     summary:
       "An AI-powered insurance application that connects natural-language questions with structured policy data.",
     description:
